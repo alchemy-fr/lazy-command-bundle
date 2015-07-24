@@ -1,0 +1,16 @@
+{
+  "name": "alchemy/lazy-command-bundle",
+  "authors": [
+    {
+      "name": "Thibaud Fabre",
+      "email": "thibaud@aztech.io"
+    }
+  ],
+  "license": "MIT",
+  "require": {
+    "ocramius/proxy-manager": "^1.0"
+  },
+  "require-dev": {
+    "symfony/symfony": "~2.6"
+  }
+}
