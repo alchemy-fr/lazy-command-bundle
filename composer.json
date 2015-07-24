@@ -6,6 +6,11 @@
       "email": "thibaud@aztech.io"
     }
   ],
+  "autoload": {
+    "psr-4": {
+      "Alchemy\\LazyCommandBundle\\": "src/"
+    }
+  },
   "license": "MIT",
   "require": {
     "ocramius/proxy-manager": "^1.0"
