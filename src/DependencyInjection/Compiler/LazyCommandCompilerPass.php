@@ -2,54 +2,51 @@
 
 namespace Alchemy\LazyCommandBundle\DependencyInjection\Compiler;
 
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Definition;
-use Symfony\Component\DependencyInjection\Reference;
 
+/**
+ * Makes commands lazy: Symfony only creates a command, and the services it
+ * depends on, when its tag holds its name. Runs configure() here to read it.
+ */
 class LazyCommandCompilerPass implements CompilerPassInterface
 {
-
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
-        $proxyFactory = new Definition('Alchemy\LazyCommandBundle\Proxy\ServiceProxyFactory');
-        $proxyFactory->addArgument(new Reference('service_container'));
-
-        $container->setDefinition('console.command.argument_proxy_factory', $proxyFactory);
-
-        $commands = $container->findTaggedServiceIds('console.command');
-
-        foreach ($commands as $id => $tags) {
-            $definition = $container->getDefinition($id);
-
-            $this->replaceArguments($container, $definition, $id);
-        }
-    }
-
-    private function replaceArguments(ContainerBuilder $container, Definition $definition, $id)
-    {
-        $arguments = $definition->getArguments();
-
-        foreach ($arguments as $index => $argument) {
-            if (! $argument instanceof Reference) {
+        foreach ($container->findTaggedServiceIds('console.command') as $id => $tags) {
+            if (isset($tags[0]['command'])) {
                 continue;
             }
 
-            $argumentDefinition = $container->getDefinition((string) $argument);
-            $lazyArgument = new Definition($argumentDefinition->getClass());
-            $lazyKey = '__lazy__' . (string) $argument;
+            $definition = $container->getDefinition($id);
+            $class = $container->getParameterBag()->resolveValue($definition->getClass());
+            $command = $this->configure($class);
 
-            $container->setDefinition($lazyKey, $lazyArgument);
+            if ($command === null || !$command->getName()) {
+                continue;
+            }
 
-            $lazyArgument->setFactory(array(new Reference('console.command.argument_proxy_factory'), 'getService'));
-            $lazyArgument->setArguments(array(
-                $argumentDefinition->getClass(),
-                (string) $argument
-            ));
+            $definition->clearTag('console.command');
+            $definition->addTag('console.command', ['command' => $command->getName()]);
 
-            $arguments[$index] = new Reference($lazyKey);
+            foreach ($command->getAliases() as $alias) {
+                $definition->addTag('console.command', ['command' => $alias]);
+            }
         }
+    }
 
-        $definition->setArguments($arguments);
+    private function configure(string $class): ?Command
+    {
+        try {
+            $reflection = new \ReflectionClass($class);
+            $command = $reflection->newInstanceWithoutConstructor();
+            (new \ReflectionMethod(Command::class, '__construct'))->invoke($command);
+
+            return $command;
+        } catch (\Throwable) {
+            // configure() needs a dependency: the command stays eager
+            return null;
+        }
     }
 }
