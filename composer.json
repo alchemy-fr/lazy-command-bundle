@@ -1,21 +1,22 @@
 {
-  "name": "alchemy/lazy-command-bundle",
-  "authors": [
-    {
-      "name": "Thibaud Fabre",
-      "email": "thibaud@aztech.io"
-    }
-  ],
-  "autoload": {
-    "psr-4": {
-      "Alchemy\\LazyCommandBundle\\": "src/"
-    }
-  },
-  "license": "MIT",
-  "require": {
-    "ocramius/proxy-manager": "^1.0"
-  },
-  "require-dev": {
-    "symfony/symfony": "~2.6"
-  }
+    "name": "alchemy/lazy-command-bundle",
+    "authors": [
+        {
+            "name": "Thibaud Fabre",
+            "email": "thibaud@aztech.io"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Alchemy\\LazyCommandBundle\\": "src/"
+        }
+    },
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "symfony/console": "^7.4",
+        "symfony/dependency-injection": "^7.4",
+        "symfony/http-kernel": "^7.4"
+    },
+    "require-dev": {}
 }
